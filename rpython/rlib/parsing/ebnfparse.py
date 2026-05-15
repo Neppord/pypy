@@ -117,16 +117,20 @@ class ParserBuilder(object):
         self.first_rule = None
         self.literals = {}
 
-    def visit_file(self, node):  # type: (object) -> object
+
+    def visit_file(self, node):
+        # type: (Node) -> Node
         """Visits the file node, delegating to the first child."""
         return node.children[0].visit(self)
 
-    def visit_list(self, node):  # type: (object) -> None
+    def visit_list(self, node):
+        # type: (Node) -> None
         """Visits each child node in the list."""
         for child in node.children:
             child.visit(self)
 
-    def visit_regex(self, node):  # type: (object) -> None
+    def visit_regex(self, node):
+        # type: (Node) -> None
         """Parses a regex definition and registers it."""
         regextext = node.children[2].additional_info[1:-1].replace('\\"', '"')
         regex = parse_regex(regextext)
@@ -136,7 +140,8 @@ class ParserBuilder(object):
         self.regexs.append(regex)
         self.names.append(node.children[0].additional_info)
 
-    def visit_production(self, node):  # type: (object) -> None
+    def visit_production(self, node):
+        # type: (Node) -> None
         """Visits a production rule and registers it with expansions."""
         name = node.children[0].additional_info
         if len(node.children) == 3:
@@ -155,7 +160,8 @@ class ParserBuilder(object):
         self.changes.append(changes)
         self.rules.append(Rule(name, rule_expansions))
 
-    def visit_body(self, node):  # type: (object) -> list
+    def visit_body(self, node):
+        # type: (Node) -> list
         """Visits body children and returns a list of expansions."""
         expansions = []
         for child in node.children:
@@ -163,7 +169,8 @@ class ParserBuilder(object):
             expansions.append(expansion)
         return expansions
 
-    def visit_expansion(self, node):  # type: (object) -> list
+    def visit_expansion(self, node):
+        # type: (Node) -> list
         """Visits expansion children and returns a combined list of expansions."""
         expansions = []
         for child in node.children:
@@ -171,7 +178,8 @@ class ParserBuilder(object):
             expansions += expansion
         return expansions
 
-    def visit_enclosed(self, node):  # type: (object) -> list
+    def visit_enclosed(self, node):
+        # type: (Node) -> list
         """Visits an enclosed construct and returns a list of (name, change) tuples."""
         result = []
         newchange = node.children[0].additional_info
@@ -180,7 +188,8 @@ class ParserBuilder(object):
             result.append((name, newchange))
         return result
 
-    def visit_decorated(self, node):  # type: (object) -> list
+    def visit_decorated(self, node):
+        # type: (Node) -> list
         """Visits a decorated construct and returns a list of (name, change) tuples."""
         expansions = node.children[0].visit(self)
         expansions, changes = zip(*expansions)
@@ -207,14 +216,16 @@ class ParserBuilder(object):
             self.maybe_rules[name] = self.rules[-1]
         return [(name, ">")]
 
-    def visit_primary_parens(self, node):  # type: (object) -> object
+    def visit_primary_parens(self, node):
+        # type: (Node) -> Node
         """Visits a parenthesized expression, delegating to the appropriate child."""
         if len(node.children) == 1:
             return node.children[0].visit(self)
         else:
             return node.children[1].visit(self)
 
-    def visit_primary(self, node):  # type: (object) -> list
+    def visit_primary(self, node):
+        # type: (Node) -> list
         """Visits a primary symbol and returns a list of (name, change) tuples."""
         if node.children[0].symbol == "QUOTE":
             from rpython.rlib.parsing.regexparse import unescape
@@ -225,7 +236,8 @@ class ParserBuilder(object):
         else:
             return [(node.children[0].additional_info, " ")]
 
-    def get_literal_name(self, expression):  # type: (str) -> str
+    def get_literal_name(self, expression):
+        # type: (str) -> str
         """Returns or generates a unique name for a literal expression."""
         if expression in self.literals:
             return self.literals[expression]
@@ -242,6 +254,8 @@ class ParserBuilder(object):
         return self.add_all_possibilities()
 
     def fix_rule_order(self):
+        # type: () -> None
+        """Reorders rules so that the first rule is the start rule."""
         if self.rules[0].nonterminal != self.first_rule:
             for i, r in enumerate(self.rules):
                 if r.nonterminal == self.first_rule:

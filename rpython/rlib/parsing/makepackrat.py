@@ -308,6 +308,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.matchers = {}
 
     def make_parser(self):
+        # type: () -> type
+        """Creates and returns the Parser class with memoization and error handling."""
         m = {'Status': Status,
              'Nonterminal': Nonterminal,
              'Symbol': Symbol,}
@@ -315,6 +317,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         return m['Parser']
 
     def memoize_header(self, name, args):
+        # type: (str, list) -> None
+        """Emits the memoization header code for the given name and args."""
         dictname = "_dict_%s" % (name, )
         self.emit_initcode("self.%s = {}" % (dictname, ))
         if args:
@@ -351,6 +355,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.emit("_error = None")
 
     def memoize_footer(self, name, args):
+        # type: (str, list) -> None
+        """Emits the memoization footer code for the given name and args."""
         dictname = "_dict_%s" % (name, )
         if self.have_call:
             with self.block(
@@ -383,15 +389,21 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.emit("raise BacktrackException(_error)")
 
     def choice_point(self, name=None):
+        # type: (Optional[str]) -> str
+        """Creates and returns a choice point variable name."""
         var = "_choice%s" % (self.namecount, )
         self.namecount += 1
         self.emit("%s = self._pos" % (var, ))
         return var
 
     def revert(self, var):
+        # type: (str) -> None
+        """Reverts the parser position to the given variable."""
         self.emit("self._pos = %s" % (var, ))
 
     def visit_list(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a list node and starts the Parser class block."""
         self.start_block("class Parser(object):")
         for elt in t.children:
             self.dispatch(elt)
@@ -405,6 +417,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.end_block("class")
 
     def emit_regex_code(self):
+        # type: () -> None
+        """Emits regex matching code for all registered regex patterns."""
         for regex, matcher in self.matchers.iteritems():
             with  self.block(
                     "def _regex%s(self):" % (abs(hash(regex)), )):
@@ -438,6 +452,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
                 self.emit(str(matcher))
 
     def visit_production(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a production node and generates the corresponding parser method."""
         name = t.children[0]
         if name in self.names:
             raise Exception("name %s appears twice" % (name, ))
@@ -461,6 +477,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.end_block("def")
 
     def visit_or(self, t, first=False):
+        # type: (Nonterminal, bool) -> None
+        """Visits an 'or' node and generates backtracking code for alternatives."""
         possibilities = t.children
         if len(possibilities) > 1:
             self.start_block("while 1:")
@@ -480,10 +498,14 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.end_block("while")
 
     def visit_commands(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a commands node and dispatches to each child."""
         for elt in t.children:
             self.dispatch(elt)
 
     def visit_maybe(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a 'maybe' node (optional) and generates backtracking code."""
         c = self.choice_point()
         with self.block("try:"):
             self.dispatch(t.children[0])
@@ -491,6 +513,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.revert(c)
 
     def visit_repetition(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a repetition node and generates loop code."""
         name = "_all%s" % (self.namecount, )
         self.namecount += 1
         self.emit("%s = []" % (name, ))
@@ -509,11 +533,15 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.emit("_result = %s" % (name, ))
 
     def visit_exclusive(self, t):
+        # type: (Nonterminal) -> None
+        """Visits an exclusive node and generates exclusive choice code."""
         self.resultname = "_enclosed"
         self.dispatch(t.children[0])
         self.emit("_enclosed = _result")
 
     def visit_ignore(self, t):
+        # type: (Nonterminal) -> None
+        """Visits an ignore node and discards the result."""
         resultname = "_before_discard%i" % (self.namecount, )
         self.namecount += 1
         self.emit("%s = _result" % (resultname, ))
@@ -521,6 +549,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.emit("_result = %s" % (resultname, ))
 
     def visit_negation(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a negation node and generates negation lookahead code."""
         c = self.choice_point()
         resultname = "_stored_result%i" % (self.namecount, )
         self.namecount += 1
@@ -542,6 +572,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.emit("raise BacktrackException(%s)" % (error, ))
 
     def visit_lookahead(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a lookahead node and generates lookahead code."""
         resultname = "_stored_result%i" % (self.namecount, )
         self.emit("%s = _result" % (resultname, ))
         c = self.choice_point()
@@ -550,14 +582,20 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         self.emit("_result = %s" % (resultname, ))
 
     def visit_named_command(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a named command node and stores the result in a variable."""
         name = t.children[0]
         self.dispatch(t.children[1])
         self.emit("%s = _result" % (name, ))
 
     def visit_return(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a return node and emits the return value."""
         self.emit("_result = (%s)" % (t.children[0].additional_info[1:-1], ))
 
     def visit_if(self, t):
+        # type: (Nonterminal) -> None
+        """Visits an 'if' node and generates conditional backtracking code."""
         if len(t.children) == 2:
             self.dispatch(t.children[0])
         with self.block("if not (%s):" % (
@@ -567,6 +605,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.emit("         _startingpos, ['condition not met']))")
 
     def visit_choose(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a choose node and generates iteration with backtracking code."""
         with self.block("for %s in (%s):" % (
             t.children[0], t.children[1].additional_info[1:-1], )):
             with self.block("try:"):
@@ -578,6 +618,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.emit("raise BacktrackException(_error)")
 
     def visit_call(self, t):
+        # type: (Nonterminal) -> None
+        """Visits a call node and generates a method call."""
         self.have_call = True
         args = ", ".join(['(%s)' % (arg.additional_info[1:-1], )
                               for arg in t.children[1].children])
@@ -591,15 +633,21 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
             self.combine_error('_call_status.error')
 
     def visit_REGEX(self, t):
+        # type: (Symbol) -> None
+        """Visits a regex node and generates regex matching code."""
         r = t.additional_info[1:-1].replace('\\`', '`')
         matcher = self.get_regex(r)
         self.emit("_result = self._regex%s()" % (abs(hash(r)), ))
 
     def visit_QUOTE(self, t):
+        # type: (Symbol) -> None
+        """Visits a quote node and generates character matching code."""
         self.emit("_result = self.__chars__(%r)" % (
                     str(t.additional_info[1:-1]), ))
 
     def get_regex(self, r):
+        # type: (str) -> str
+        """Gets or creates a regex matcher string for the given pattern."""
         from rpython.rlib.parsing.regexparse import parse_regex
         if r in self.matchers:
             return self.matchers[r]
@@ -614,6 +662,8 @@ class ParserBuilder(RPythonVisitor, Codebuilder):
         return matcher
 
     def combine_error(self, newerror):
+        # type: (str) -> None
+        """Combines error information from multiple sources."""
         if self.created_error:
             self.emit(
                 "_error = self._combine_errors(_error, %s)" % (newerror, ))
