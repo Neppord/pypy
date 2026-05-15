@@ -13,6 +13,8 @@ from rpython.rlib.objectmodel import we_are_translated
 
 
 def make_ebnf_parser():
+    # type: () -> tuple[PackratParser, Lexer, type[ToAstVisitor]]
+    """Creates and returns an EBNF parser, its lexer, and an AST transformer."""
     NONTERMINALNAME = parse_regex("([a-z]|_)[a-z0-9_]*")
     SYMBOLNAME = parse_regex("_*[A-Z]([A-Z]|_)*")
     LONGQUOTED = parse_regex(r'"[^\"]*(\\\"?[^\"]+)*(\\\")?"')
@@ -48,7 +50,10 @@ def make_ebnf_parser():
     parser = PackratParser(rules, "file")
     return parser, lexer, transformer
 
+
 def parse_ebnf(s):
+    # type: (str) -> tuple[list[tuple[str, StringExpression]], list[Rule], type[ToAstVisitor]]
+    """Parses EBNF source and returns lexer names, rules, and a transformer class."""
     visitor = ParserBuilder()
     tokens = lexer.tokenize(s, True)
     #print tokens
@@ -64,6 +69,8 @@ def parse_ebnf(s):
     return zip(visitor.names, visitor.regexs), rules, ToAstVisitor
 
 def check_for_missing_names(names, regexs, rules):
+    # type: (list[str], list[tuple[str, StringExpression]], list[Rule]) -> None
+    """Raises ValueError if any symbol in rules is not known."""
     known_names = dict.fromkeys(names, True)
     known_names["EOF"] = True
     for rule in rules:
@@ -75,6 +82,8 @@ def check_for_missing_names(names, regexs, rules):
                     raise ValueError("symbol '%s' not known" % (symbol, ))
 
 def make_parse_function(regexs, rules, eof=False):
+    # type: (list[tuple[str, StringExpression]], list[Rule], bool) -> Callable[[str], Nonterminal]
+    """Creates a parser function for the given lexer names, rules, and optional EOF flag."""
     from rpython.rlib.parsing.lexer import Lexer
     names, regexs = zip(*regexs)
     if "IGNORE" in names:
@@ -108,14 +117,17 @@ class ParserBuilder(object):
         self.first_rule = None
         self.literals = {}
 
-    def visit_file(self, node):
+    def visit_file(self, node):  # type: (object) -> object
+        """Visits the file node, delegating to the first child."""
         return node.children[0].visit(self)
 
-    def visit_list(self, node):
+    def visit_list(self, node):  # type: (object) -> None
+        """Visits each child node in the list."""
         for child in node.children:
             child.visit(self)
 
-    def visit_regex(self, node):
+    def visit_regex(self, node):  # type: (object) -> None
+        """Parses a regex definition and registers it."""
         regextext = node.children[2].additional_info[1:-1].replace('\\"', '"')
         regex = parse_regex(regextext)
         if regex is None:
@@ -124,7 +136,8 @@ class ParserBuilder(object):
         self.regexs.append(regex)
         self.names.append(node.children[0].additional_info)
 
-    def visit_production(self, node):
+    def visit_production(self, node):  # type: (object) -> None
+        """Visits a production rule and registers it with expansions."""
         name = node.children[0].additional_info
         if len(node.children) == 3:
             self.changes.append([])
@@ -142,21 +155,24 @@ class ParserBuilder(object):
         self.changes.append(changes)
         self.rules.append(Rule(name, rule_expansions))
 
-    def visit_body(self, node):
+    def visit_body(self, node):  # type: (object) -> list
+        """Visits body children and returns a list of expansions."""
         expansions = []
         for child in node.children:
             expansion = child.visit(self)
             expansions.append(expansion)
         return expansions
 
-    def visit_expansion(self, node):
+    def visit_expansion(self, node):  # type: (object) -> list
+        """Visits expansion children and returns a combined list of expansions."""
         expansions = []
         for child in node.children:
             expansion = child.visit(self)
             expansions += expansion
         return expansions
 
-    def visit_enclosed(self, node):
+    def visit_enclosed(self, node):  # type: (object) -> list
+        """Visits an enclosed construct and returns a list of (name, change) tuples."""
         result = []
         newchange = node.children[0].additional_info
         for name, change in node.children[1].visit(self):
@@ -164,7 +180,8 @@ class ParserBuilder(object):
             result.append((name, newchange))
         return result
 
-    def visit_decorated(self, node):
+    def visit_decorated(self, node):  # type: (object) -> list
+        """Visits a decorated construct and returns a list of (name, change) tuples."""
         expansions = node.children[0].visit(self)
         expansions, changes = zip(*expansions)
         expansions, changes = list(expansions), "".join(changes)
@@ -190,13 +207,15 @@ class ParserBuilder(object):
             self.maybe_rules[name] = self.rules[-1]
         return [(name, ">")]
 
-    def visit_primary_parens(self, node):
+    def visit_primary_parens(self, node):  # type: (object) -> object
+        """Visits a parenthesized expression, delegating to the appropriate child."""
         if len(node.children) == 1:
             return node.children[0].visit(self)
         else:
             return node.children[1].visit(self)
 
-    def visit_primary(self, node):
+    def visit_primary(self, node):  # type: (object) -> list
+        """Visits a primary symbol and returns a list of (name, change) tuples."""
         if node.children[0].symbol == "QUOTE":
             from rpython.rlib.parsing.regexparse import unescape
             content = node.children[0].additional_info[1:-1]
@@ -206,7 +225,8 @@ class ParserBuilder(object):
         else:
             return [(node.children[0].additional_info, " ")]
 
-    def get_literal_name(self, expression):
+    def get_literal_name(self, expression):  # type: (str) -> str
+        """Returns or generates a unique name for a literal expression."""
         if expression in self.literals:
             return self.literals[expression]
         name = "__%s_%s" % (len(self.literals), expression)
@@ -216,6 +236,8 @@ class ParserBuilder(object):
         return name
 
     def get_rules_and_changes(self):
+        # type: () -> tuple[list[Rule], list[str]]
+        """Fixes rule order and returns all rules and their changes."""
         self.fix_rule_order()
         return self.add_all_possibilities()
 
@@ -228,6 +250,8 @@ class ParserBuilder(object):
             self.changes[i], self.changes[0] = self.changes[0], self.changes[i]
 
     def add_all_possibilities(self):
+        # type: () -> tuple[list[Rule], list[str]]
+        """Expands all possible combinations of optional symbols and returns final rules."""
         all_rules = []
         other_rules = []
         all_changes = []
