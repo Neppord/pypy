@@ -8,7 +8,8 @@ class RegularExpression(object):
     def __init__(self):
         raise NotImplementedError("abstract base class")
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
+        """Creates and returns an NFA for this regular expression."""
         raise NotImplementedError("abstract base class")
         
     def __add__(self, other):
@@ -41,7 +42,7 @@ class StringExpression(RegularExpression):
             return super(StringExpression, self).__add__(other)
         return StringExpression(self.string + other.string)
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa = NFA()
         firstfinal = not self.string
         state = nfa.add_state(start=True, final=firstfinal)
@@ -60,7 +61,7 @@ class RangeExpression(RegularExpression):
         self.fromchar = fromchar
         self.tochar = tochar
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa = NFA()
         startstate = nfa.add_state(start=True)
         finalstate = nfa.add_state(final=True)
@@ -77,7 +78,7 @@ class AddExpression(RegularExpression):
         self.rega = rega
         self.regb = regb
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa1 = self.rega.make_automaton()
         nfa2 = self.regb.make_automaton()
         finalstates1 = nfa1.final_states
@@ -101,7 +102,7 @@ class ExpressionTag(RegularExpression):
         self.reg = reg
         self.tag = tag
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa = self.reg.make_automaton()
         finalstates = nfa.final_states
         nfa.final_states = set()
@@ -117,7 +118,7 @@ class KleeneClosure(RegularExpression):
     def __init__(self, regex):
         self.regex = regex
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa = self.regex.make_automaton()
         oldfinal = nfa.final_states
         nfa.final_states = set()
@@ -141,7 +142,7 @@ class OrExpression(RegularExpression):
         self.rega = rega
         self.regb = regb
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa1 = self.rega.make_automaton()
         nfa2 = self.regb.make_automaton()
         oldfinal1 = nfa1.final_states
@@ -170,7 +171,7 @@ class NotExpression(RegularExpression):
     def __init__(self, reg):
         self.reg = reg
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         nfa = self.reg.make_automaton()
         # add error state
         error = nfa.add_state("error")
@@ -191,7 +192,7 @@ class LexingOrExpression(RegularExpression):
         self.regs = regs
         self.names = names
 
-    def make_automaton(self):
+    def make_automaton(self):  # type: () -> NFA
         dfas = [reg.make_automaton().make_deterministic() for reg in self.regs]
         [dfa.optimize() for dfa in dfas]
         nfas = [dfa.make_nondeterministic() for dfa in dfas]
