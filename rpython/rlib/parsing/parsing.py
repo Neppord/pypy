@@ -11,6 +11,8 @@ class Rule(object):
         self.expansions = expansions
 
     def getkey(self):
+        # type: () -> tuple[str, tuple]
+        """Returns a key tuple of (nonterminal, expansions) for this rule."""
         return (self.nonterminal, tuple(self.expansions))
 
 #    def __hash__(self):
