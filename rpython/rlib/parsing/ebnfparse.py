@@ -331,7 +331,8 @@ class TransformerMaker(Codebuilder):
         self.changes = changes
         self.nonterminals = dict.fromkeys([rule.nonterminal for rule in rules])
 
-    def make_transformer(self, print_code=False):  # type: (bool) -> type
+    def make_transformer(self, print_code=False):
+        # type: (bool) -> type
         """Generates and returns a ToAST transformer class from the rules."""
         self.start_block("class ToAST(object):")
         for i in range(len(self.rules)):
@@ -370,13 +371,15 @@ class TransformerMaker(Codebuilder):
         ToAST.changes = self.changes
         return ToAST
 
-    def dispatch(self, symbol, expr):  # type: (str, str) -> str
+    def dispatch(self, symbol, expr):
+        # type: (str, str) -> str
         """Returns a dispatch expression for the given symbol and expression."""
         if symbol in self.nonterminals:
             return "self.visit_%s(%s)" % (symbol, expr)
         return "[%s]" % (expr, )
 
-    def create_visit_method(self, index):  # type: (int) -> None
+    def create_visit_method(self, index):
+        # type: (int) -> None
         """Creates a visit method for the rule at the given index."""
         rule = self.rules[index]
         change = self.changes[index]
@@ -399,7 +402,8 @@ class TransformerMaker(Codebuilder):
                 self.create_returning_code(expansion, subchange)
         self.end_block(rule.nonterminal)
 
-    def create_returning_code(self, expansion, subchange):  # type: (list, str) -> None
+    def create_returning_code(self, expansion, subchange):
+        # type: (list, str) -> None
         """Emits the return statement for a visit method with the given expansion."""
         assert len(expansion) == len(subchange)
         self.emit("children = []")
@@ -416,6 +420,8 @@ class TransformerMaker(Codebuilder):
         self.emit("return [Nonterminal(node.symbol, children)]")
 
     def generate_conditions(self, index):
+        # type: (int) -> Iterator[tuple[list, str]]
+        """Generates conditions for the rule at the given index and yields (expansion, subchange) tuples."""
         rule = self.rules[index]
         change = self.changes[index]
         len_partition = {}
