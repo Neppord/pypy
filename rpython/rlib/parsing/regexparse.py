@@ -3,7 +3,7 @@ from __future__ import print_function
 import py
 from rpython.rlib.parsing.parsing import PackratParser, Rule
 from rpython.rlib.parsing.tree import Nonterminal
-from rpython.rlib.parsing.regex import StringExpression, RangeExpression
+from rpython.rlib.parsing.regex import StringExpression, RangeExpression, RegularExpression
 from rpython.rlib.parsing.lexer import Lexer, DummyLexer
 from rpython.rlib.parsing.deterministic import compress_char_set, DFA
 import string
@@ -210,12 +210,14 @@ NUM:
 """
 
 
-def parse_regex(s):
+def parse_regex(s):  # type: (str) -> RegularExpression
+    """Parses a regex string and returns a RegularExpression."""
     p = RegexParser(s)
     r = p.parse()
     return r
 
-def make_runner(regex, view=False):
+def make_runner(regex, view=False):  # type: (str, bool) -> Callable[[str], bool]
+    """Creates a DFA runner from a regex string, optionally visualizing the automaton."""
     r = parse_regex(regex)
     nfa = r.make_automaton()
     dfa = nfa.make_deterministic()
