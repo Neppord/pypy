@@ -6,6 +6,8 @@ from rpython.rlib.parsing.parsing import ParseError, Rule
 import py
 
 def make_parser_from_file(filename):
+    # type: (str) -> Callable[[str], Nonterminal]
+    """Creates a parser function from an EBNF grammar file."""
     try:
         t = py.path.local(filename).read(mode='U')
         regexs, rules, ToAST = parse_ebnf(t)
