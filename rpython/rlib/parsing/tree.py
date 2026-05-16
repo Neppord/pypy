@@ -3,6 +3,8 @@ from rpython.rlib.objectmodel import not_rpython
 
 class Node(object):
     def view(self):
+        # type: () -> None
+        """Displays the parse tree as a DOT graph using dotviewer."""
         from dotviewer import graphclient
         content = ["digraph G{"]
         content.extend(self.dot())
@@ -25,7 +27,8 @@ class Symbol(Node):
         self.additional_info = additional_info
         self.token = token
 
-    def getsourcepos(self):
+    def getsourcepos(self):  # type: () -> SourcePos
+        """Returns the source position of this symbol."""
         return self.token.source_pos
     
     def __repr__(self):
