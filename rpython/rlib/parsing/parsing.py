@@ -84,6 +84,8 @@ class ErrorInformation(object):
         self.pos = pos
 
 def combine_errors(self, other):
+    # type: (ErrorInformation, ErrorInformation) -> ErrorInformation
+    """Combines two ErrorInformation objects, preferring the one with the higher position."""
     if self is None:
         return other
     if (other is None or self.pos > other.pos or
