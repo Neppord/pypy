@@ -68,7 +68,8 @@ class Lexer(object):
                                self.ignore, eof, token_class=token_class)
 
     def tokenize(self, text, eof=False):
-        """Return a list of Token's from text."""
+        # type: (str, bool) -> list[Token]
+        """Returns a list of tokens from the given text."""
         r = self.get_runner(text, eof)
         result = []
         while 1:
@@ -114,7 +115,8 @@ class AbstractLexingDFARunner(deterministic.DFARunner):
         self.lineno = 0
         self.columnno = 0
 
-    def find_next_token(self):
+    def find_next_token(self):  # type: () -> Token
+        """Finds and returns the next token, advancing the position."""
         while 1:
             self.state = 0
             start = self.last_matched_index + 1
@@ -156,8 +158,8 @@ class AbstractLexingDFARunner(deterministic.DFARunner):
             source_pos = self.token_position_class(i - 1, self.lineno, self.columnno)
             raise deterministic.LexerError(self.text, self.state, source_pos)
 
-    def adjust_position(self, token):
-        """Update the line# and col# as a result of this token."""
+    def adjust_position(self, token):  # type: (str) -> None
+        """Updates the line and column numbers as a result of this token."""
         newlines = token.count("\n")
         self.lineno += newlines
         if newlines==0:
@@ -181,7 +183,8 @@ class AbstractLexingDFARunner(deterministic.DFARunner):
 #            return ~i
 #        return i
 
-    def inner_loop(self, i):
+    def inner_loop(self, i):  # type: (int) -> int
+        """Runs the matcher on the text starting at position i and returns the result."""
         return self.matcher(self, i)
 
     next = find_next_token
