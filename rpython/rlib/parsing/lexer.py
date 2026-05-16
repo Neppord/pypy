@@ -8,6 +8,8 @@ class Token(object):
         self.source_pos = source_pos
 
     def copy(self):
+        # type: () -> Token
+        """Returns a copy of this token."""
         return self.__class__(self.name, self.source, self.source_pos)
 
     def __eq__(self, other):
