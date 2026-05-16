@@ -331,7 +331,8 @@ class TransformerMaker(Codebuilder):
         self.changes = changes
         self.nonterminals = dict.fromkeys([rule.nonterminal for rule in rules])
 
-    def make_transformer(self, print_code=False):
+    def make_transformer(self, print_code=False):  # type: (bool) -> type
+        """Generates and returns a ToAST transformer class from the rules."""
         self.start_block("class ToAST(object):")
         for i in range(len(self.rules)):
             self.create_visit_method(i)
@@ -369,12 +370,14 @@ class TransformerMaker(Codebuilder):
         ToAST.changes = self.changes
         return ToAST
 
-    def dispatch(self, symbol, expr):
+    def dispatch(self, symbol, expr):  # type: (str, str) -> str
+        """Returns a dispatch expression for the given symbol and expression."""
         if symbol in self.nonterminals:
             return "self.visit_%s(%s)" % (symbol, expr)
         return "[%s]" % (expr, )
 
-    def create_visit_method(self, index):
+    def create_visit_method(self, index):  # type: (int) -> None
+        """Creates a visit method for the rule at the given index."""
         rule = self.rules[index]
         change = self.changes[index]
         self.start_block("def visit_%s(self, node):" % (rule.nonterminal, ))
@@ -396,7 +399,8 @@ class TransformerMaker(Codebuilder):
                 self.create_returning_code(expansion, subchange)
         self.end_block(rule.nonterminal)
 
-    def create_returning_code(self, expansion, subchange):
+    def create_returning_code(self, expansion, subchange):  # type: (list, str) -> None
+        """Emits the return statement for a visit method with the given expansion."""
         assert len(expansion) == len(subchange)
         self.emit("children = []")
         for i, (symbol, c) in enumerate(zip(expansion, subchange)):
