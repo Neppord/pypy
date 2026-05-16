@@ -110,6 +110,8 @@ class LazyParseTable(object):
         self.errorinformation = {}
 
     def match_symbol(self, i, symbol):
+        # type: (int, str) -> tuple[Node, int, ErrorInformation]
+        """Matches a symbol at position i and returns (node, next_position, error)."""
         #print i, symbol
         #print self.matched.keys()
         if (i, symbol) in self.matched:
@@ -172,13 +174,16 @@ class PackratParser(object):
             assert not self.has_left_recursion()
         self.parsetablefactory = parsetablefactory
 
-    def is_nonterminal(self, symbol):
+    def is_nonterminal(self, symbol):  # type: (str) -> bool
+        """Checks if the symbol is a nonterminal in the grammar."""
         return symbol in self.nonterminal_to_rule
 
-    def get_rule(self, symbol):
+    def get_rule(self, symbol):  # type: (str) -> Rule
+        """Returns the rule for the given nonterminal symbol."""
         return self.nonterminal_to_rule[symbol]
 
-    def parse(self, tokeniterator, lazy=False):
+    def parse(self, tokeniterator, lazy=False):  # type: (list, bool) -> Nonterminal
+        """Parses the token iterator and returns the resulting parse tree."""
         if lazy:
             input = LazyInputStream(tokeniterator)
         else:
