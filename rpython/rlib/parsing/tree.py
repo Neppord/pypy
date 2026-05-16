@@ -59,7 +59,8 @@ class Nonterminal(Node):
         self.children = children
         self.symbol = symbol
 
-    def getsourcepos(self):  # type: () -> SourcePos
+    def getsourcepos(self):
+        # type: () -> SourcePos
         """Returns the source position of this nonterminal, delegating to the first child."""
         try:
             return self.children[0].getsourcepos()
