@@ -8,7 +8,8 @@ class RegularExpression(object):
     def __init__(self):
         raise NotImplementedError("abstract base class")
 
-    def make_automaton(self):  # type: () -> NFA
+    def make_automaton(self):
+        # type: () -> NFA
         """Creates and returns an NFA for this regular expression."""
         raise NotImplementedError("abstract base class")
         
@@ -31,6 +32,8 @@ class RegularExpression(object):
         return NotExpression(self)
 
     def kleene(self):
+        # type: () -> KleeneClosure
+        """Returns a Kleene closure (zero or more repetitions) of this expression."""
         return KleeneClosure(self)
 
 class StringExpression(RegularExpression):
