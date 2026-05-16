@@ -3,7 +3,7 @@ from __future__ import print_function
 import py
 
 from rpython.rlib.parsing.parsing import PackratParser, Rule
-from rpython.rlib.parsing.tree import Nonterminal, RPythonVisitor
+from rpython.rlib.parsing.tree import Nonterminal, RPythonVisitor, Node
 from rpython.rlib.parsing.codebuilder import Codebuilder
 from rpython.rlib.parsing.regexparse import parse_regex
 from rpython.rlib.parsing.regex import StringExpression
@@ -117,7 +117,6 @@ class ParserBuilder(object):
         self.first_rule = None
         self.literals = {}
 
-
     def visit_file(self, node):
         # type: (Node) -> Node
         """Visits the file node, delegating to the first child."""
@@ -160,8 +159,7 @@ class ParserBuilder(object):
         self.changes.append(changes)
         self.rules.append(Rule(name, rule_expansions))
 
-    def visit_body(self, node):
-        # type: (Node) -> list
+    def visit_body(self, node):  # type: (Node) -> list
         """Visits body children and returns a list of expansions."""
         expansions = []
         for child in node.children:
