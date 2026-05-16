@@ -14,7 +14,8 @@ class BacktrackException(Exception):
 
 
 class TreeOptimizer(RPythonVisitor):
-    def visit_or(self, t):  # type: (Nonterminal) -> Node
+    def visit_or(self, t):
+        # type: (Nonterminal) -> Node
         """Visits an 'or' node and returns the result."""
         if len(t.children) == 1:
             return self.dispatch(t.children[0])
@@ -22,7 +23,8 @@ class TreeOptimizer(RPythonVisitor):
 
     visit_commands = visit_or
 
-    def visit_negation(self, t):  # type: (Nonterminal) -> Node
+    def visit_negation(self, t):
+        # type: (Nonterminal) -> Node
         """Visits a 'negation' node and returns the result."""
         child = self.dispatch(t.children[0])
         if child.symbol == "negation":
@@ -31,13 +33,16 @@ class TreeOptimizer(RPythonVisitor):
         t.children[0] = child
         return t
 
-    def general_nonterminal_visit(self, t):  # type: (Nonterminal) -> Node
+    def general_nonterminal_visit(self, t):
+        # type: (Nonterminal) -> Node
         """Visits a nonterminal node, dispatching to children."""
         for i in range(len(t.children)):
             t.children[i] = self.dispatch(t.children[i])
         return t
 
     def general_visit(self, t):
+        # type: (Node) -> Node
+        """Visits a node and returns it unchanged."""
         return t
 
 
@@ -254,7 +259,8 @@ class ErrorInformation(object):
     def __str__(self):
         return "ErrorInformation(%s, %s)" % (self.pos, self.expected)
 
-    def get_line_column(self, source):
+    def get_line_column(self, source):  # type: (str) -> tuple[int, int]
+        """Returns the (line_number, column_number) for this error position."""
         pos = self.pos
         assert pos >= 0
         uptoerror = source[:pos]
