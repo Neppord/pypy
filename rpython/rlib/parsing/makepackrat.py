@@ -259,7 +259,8 @@ class ErrorInformation(object):
     def __str__(self):
         return "ErrorInformation(%s, %s)" % (self.pos, self.expected)
 
-    def get_line_column(self, source):  # type: (str) -> tuple[int, int]
+    def get_line_column(self, source):
+        # type: (str) -> tuple[int, int]
         """Returns the (line_number, column_number) for this error position."""
         pos = self.pos
         assert pos >= 0
@@ -269,6 +270,8 @@ class ErrorInformation(object):
         return lineno, columnno
 
     def nice_error_message(self, filename='<filename>', source=""):
+        # type: (str, str) -> str
+        """Returns a human-readable error message with line and column information."""
         if source:
             lineno, columnno = self.get_line_column(source)
             result = ["  File %s, line %s" % (filename, lineno + 1)]
