@@ -212,7 +212,8 @@ class LexingDFARunner(AbstractLexingDFARunner):
         """Checks if the token at the given state should be ignored."""
         return self.automaton.names[state] in self.ignore
 
-    def make_token(self, index, state, text, eof=False):
+    def make_token(self, index, state, text, eof=False):  # type: (int, int, str, bool) -> Token
+        """Creates and returns a token with the given index, state, text, and eof flag."""
         assert (eof and state == -1) or 0 <= state < len(self.automaton.names)
 
         source_pos = self.token_position_class(index, self.lineno, self.columnno)
