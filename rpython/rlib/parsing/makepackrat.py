@@ -14,14 +14,16 @@ class BacktrackException(Exception):
 
 
 class TreeOptimizer(RPythonVisitor):
-    def visit_or(self, t):
+    def visit_or(self, t):  # type: (Nonterminal) -> Node
+        """Visits an 'or' node and returns the result."""
         if len(t.children) == 1:
             return self.dispatch(t.children[0])
         return self.general_nonterminal_visit(t)
 
     visit_commands = visit_or
 
-    def visit_negation(self, t):
+    def visit_negation(self, t):  # type: (Nonterminal) -> Node
+        """Visits a 'negation' node and returns the result."""
         child = self.dispatch(t.children[0])
         if child.symbol == "negation":
             child.symbol = "lookahead"
@@ -29,7 +31,8 @@ class TreeOptimizer(RPythonVisitor):
         t.children[0] = child
         return t
 
-    def general_nonterminal_visit(self, t):
+    def general_nonterminal_visit(self, t):  # type: (Nonterminal) -> Node
+        """Visits a nonterminal node, dispatching to children."""
         for i in range(len(t.children)):
             t.children[i] = self.dispatch(t.children[i])
         return t

@@ -174,15 +174,18 @@ class PackratParser(object):
             assert not self.has_left_recursion()
         self.parsetablefactory = parsetablefactory
 
-    def is_nonterminal(self, symbol):  # type: (str) -> bool
+    def is_nonterminal(self, symbol):
+        # type: (str) -> bool
         """Checks if the symbol is a nonterminal in the grammar."""
         return symbol in self.nonterminal_to_rule
 
-    def get_rule(self, symbol):  # type: (str) -> Rule
+    def get_rule(self, symbol):
+        # type: (str) -> Rule
         """Returns the rule for the given nonterminal symbol."""
         return self.nonterminal_to_rule[symbol]
 
-    def parse(self, tokeniterator, lazy=False):  # type: (list, bool) -> Nonterminal
+    def parse(self, tokeniterator, lazy=False):
+        # type: (list, bool) -> Nonterminal
         """Parses the token iterator and returns the resulting parse tree."""
         if lazy:
             input = LazyInputStream(tokeniterator)
@@ -197,6 +200,8 @@ class PackratParser(object):
 
     @not_rpython
     def has_left_recursion(self):
+        # type: () -> bool
+        """Checks if the grammar has left recursion."""
         follows = {}
         for rule in self.rules:
             follow = py.builtin.set()
