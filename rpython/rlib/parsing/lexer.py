@@ -158,7 +158,7 @@ class AbstractLexingDFARunner(deterministic.DFARunner):
             source_pos = self.token_position_class(i - 1, self.lineno, self.columnno)
             raise deterministic.LexerError(self.text, self.state, source_pos)
 
-    def adjust_position(self, token):  # type: (str) -> None
+    def adjust_position(self, token):  # type: (Token) -> None
         """Updates the line and column numbers as a result of this token."""
         newlines = token.count("\n")
         self.lineno += newlines
@@ -189,7 +189,8 @@ class AbstractLexingDFARunner(deterministic.DFARunner):
 
     next = find_next_token
 
-    def __iter__(self):
+    def __iter__(self):  # type: () -> AbstractLexingDFARunner
+        """Returns self to support iteration over tokens."""
         return self
 
 class LexingDFARunner(AbstractLexingDFARunner):
@@ -207,7 +208,8 @@ class LexingDFARunner(AbstractLexingDFARunner):
         AbstractLexingDFARunner.__init__(self, matcher, automaton, text, eof)
         self.ignore = ignore
 
-    def ignore_token(self, state):
+    def ignore_token(self, state):  # type: (int) -> bool
+        """Checks if the token at the given state should be ignored."""
         return self.automaton.names[state] in self.ignore
 
     def make_token(self, index, state, text, eof=False):
