@@ -27,7 +27,8 @@ class Symbol(Node):
         self.additional_info = additional_info
         self.token = token
 
-    def getsourcepos(self):  # type: () -> SourcePos
+    def getsourcepos(self):
+        # type: () -> SourcePos
         """Returns the source position of this symbol."""
         return self.token.source_pos
     
@@ -44,6 +45,8 @@ class Symbol(Node):
 
     @not_rpython
     def visit(self, visitor):
+        # type: (RPythonVisitor) -> Node
+        """Visits this symbol with the given visitor and returns the result."""
         if isinstance(visitor, RPythonVisitor):
             return visitor.dispatch(self)
         method = getattr(visitor, "visit_" + self.symbol, None)
@@ -56,7 +59,8 @@ class Nonterminal(Node):
         self.children = children
         self.symbol = symbol
 
-    def getsourcepos(self):
+    def getsourcepos(self):  # type: () -> SourcePos
+        """Returns the source position of this nonterminal, delegating to the first child."""
         try:
             return self.children[0].getsourcepos()
         except IndexError:
@@ -82,6 +86,8 @@ class Nonterminal(Node):
 
     @not_rpython
     def visit(self, visitor):
+        # type: (RPythonVisitor) -> Node
+        """Visits this nonterminal with the given visitor and returns the result."""
         if isinstance(visitor, RPythonVisitor):
             return visitor.dispatch(self)
         general = getattr(visitor, "visit", None)
