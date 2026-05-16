@@ -31,6 +31,8 @@ class SourcePos(object):
         self.columnno = columnno    # column in line
 
     def copy(self):
+        # type: () -> SourcePos
+        """Returns a copy of this source position."""
         return SourcePos(self.i, self.lineno, self.columnno)
 
     def __eq__(self, other):
@@ -60,6 +62,8 @@ class Lexer(object):
         self.matcher = self.automaton.make_lexing_code()
 
     def get_runner(self, text, eof=False, token_class=None):
+        # type: (str, bool, Optional[type]) -> LexingDFARunner
+        """Creates and returns a runner for the given text."""
         return LexingDFARunner(self.matcher, self.automaton, text,
                                self.ignore, eof, token_class=token_class)
 
