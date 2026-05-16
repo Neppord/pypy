@@ -30,7 +30,7 @@ for i in range(256):
     escaped = "c%s" % chr(i)
     ESCAPES[escaped] = chr(ord(chr(i).upper()) ^ 0x40)
 
-def unescape_muncher(string):
+def unescape_muncher(string):  # type: (str) -> tuple[str, str]
     """Return a tuple, representing the first character of the string
     (appropriately unescaped) and the rest of the string that wasn't
     handled."""
