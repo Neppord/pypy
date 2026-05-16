@@ -58,8 +58,8 @@ def unescape_muncher(string):  # type: (str) -> tuple[str, str]
     return string[1], string[2:]
 
 
-def unescape(s):
-    """Unescape a whole string."""
+def unescape(s):  # type: (str) -> str
+    """Unescape a whole string, processing escape sequences."""
     result = []
     while s:
         char, s = unescape_muncher(s)
